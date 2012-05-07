@@ -1,3 +1,3 @@
 (defproject Grep "1.0.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :dependencies [[org.clojure/clojure "1.2.1"]])
+  :description "A simple grep in Clojure using javax.regexp"
+  :dependencies [[org.clojure/clojure "1.3.0"]])
