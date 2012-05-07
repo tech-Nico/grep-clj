@@ -1,0 +1,43 @@
+(ns Grep.core
+  (:import (java.io BufferedReader FileReader))
+)
+
+(defn search-line [line search-pattern line-num]
+  (let [matcher (re-matcher (re-pattern search-pattern) line)
+        results (hash-map line-num (list) :found 0)]
+    (loop [matched (re-find matcher)
+           res results
+           acc 0]
+      (if (not (nil? matched))
+        (do
+          (let [new-results  (assoc results line-num (list (.start matcher) (.end matcher)) :found acc)]
+            
+            (recur (re-find matcher) new-results (inc acc))
+          )
+        )
+      
+         results
+         
+        
+      )
+    )
+  )
+)
+
+
+
+ ;; grep simply scan the given fine and search for the specified reg-ex
+ ;; It returns a list of couples [col row] where each matching has been found
+(defn grep [filename search-for]
+  (let [line-num 0]
+    (with-open [rdr (BufferedReader. (FileReader. filename))]
+      (doseq [line (line-seq rdr)]
+        (println (search-line line search-for (inc line-num)))
+      )
+     )
+    )
+ )
+  
+
+(grep "c:/emacs-23.4/test.txt" "let")
+This is a let test for the command let
