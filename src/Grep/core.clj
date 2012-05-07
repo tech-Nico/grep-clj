@@ -41,21 +41,20 @@
      (do
         (println "Number of occurrencies found: "  occ)
         (println (map (fn [curr-map]
-                        (str "\nLine "
-                         (get-in  curr-map [:line-num])
-                         "-> "
-                         (doseq [found (get-in curr-map [:occurrencies])]
-                           
-                           (str (get-in found [:start]
-                           )
-                         )
-                        )))
+                        (let [num-occ (count (get curr-map :occurrencies))]
+                              (str "\nLine "
+                                   (get-in  curr-map [:line-num])
+                                   "-> "
+                                   (if (> num-occ 1 )
+                                     (str num-occ " occurrencies")
+                                     (str num-occ " occurrency")
+                                     ))))
                           results)
         ))
       (println "Sorry. No occurrencies found")
-     )
+     ))
   )
-)
+
 
  ;; grep simply scan the given fine and search for the specified reg-ex
  ;; It returns a list of couples [col row] where each matching has been found
@@ -79,7 +78,6 @@
                        results))
               ))
           (do
-            (println "TEST: " results)
             (show-results (sort-by :line-num results))
 
             )
