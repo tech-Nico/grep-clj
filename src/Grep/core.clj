@@ -38,10 +38,20 @@
 
   (let [occ  (count-occurrencies results)]
     (if (> occ 0)
-      (do
+     (do
         (println "Number of occurrencies found: "  occ)
-        (->println (map #(str  "Line " (get  %1 :line-num) (map  (get %1 :occurrencies) results))
-      )
+        (println (map (fn [curr-map]
+                        (str "\nLine "
+                         (get-in  curr-map [:line-num])
+                         "-> "
+                         (doseq [found (get-in curr-map [:occurrencies])]
+                           
+                           (str (get-in found [:start]
+                           )
+                         )
+                        )))
+                          results)
+        ))
       (println "Sorry. No occurrencies found")
      )
   )
@@ -67,10 +77,14 @@
                      (if (> (get-in res [:found]) 0)
                        (conj results res)
                        results))
-          ))
+              ))
+          (do
+            (println "TEST: " results)
+            (show-results (sort-by :line-num results))
+
+            )
           
-        (show-results (sort-by :line-num results))
-))))
+            ))))
 
 (defn grep [filename search-for]
   (if (. (java.io.File. filename) exists)
@@ -79,4 +93,4 @@
     )
   )
     
-(grep "./test.txt" "defn")
+(grep "./test.txt" "let")
