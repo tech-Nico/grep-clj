@@ -1,6 +1,6 @@
 (ns Grep.core
   (:import (java.io BufferedReader FileReader))
-  )
+  (:gen-class))
 (use 'clojure.pprint)
 
 (defn search-line [line search-pattern line-num]
@@ -45,10 +45,13 @@
                               (str "\nLine "
                                    (get-in  curr-map [:line-num])
                                    "-> "
-                                   (if (> num-occ 1 )
+                                  (if (> num-occ 1 )
                                      (str num-occ " occurrencies")
                                      (str num-occ " occurrency")
-                                     ))))
+                                     )
+                                  "at "
+                                   (apply str (map #(str "(" ( %1 :start) ", " (%1 :end) ") ") (sort-by :start (get-in curr-map [:occurrencies])))) 
+                                   )))
                           results)
         ))
       (println "Sorry. No occurrencies found")
@@ -61,28 +64,15 @@
 (defn process-file [filename search-for]
   
     (with-open [rdr (BufferedReader. (FileReader. filename))]
+       
+      (show-results
+       (sort-by :line-num
+                (filter #(> (% :found) 0)
+                        (map-indexed  (fn [line-num line]
+                                (if (not (nil? line))
+                                  (search-line line search-for (+ 1 line-num)))) (line-seq rdr)))))
 
-      (loop [ my-line-seq (line-seq rdr)
-             line (first my-line-seq)
-             line-num 1
-             results '()]
-        (if-not (nil? line)
-          (do
-            (let [res (search-line line search-for line-num) ] 
-                  
-              (recur (rest my-line-seq)
-                     (first  my-line-seq)
-                     (inc line-num)
-                     (if (> (get-in res [:found]) 0)
-                       (conj results res)
-                       results))
-              ))
-          (do
-            (show-results (sort-by :line-num results))
-
-            )
-          
-            ))))
+            ))
 
 (defn grep [filename search-for]
   (if (. (java.io.File. filename) exists)
@@ -90,5 +80,8 @@
     (println "File [" filename "] not found")
     )
   )
-    
-(grep "./test.txt" "let")
+
+(defn -main
+  ([] (println "Syntax: grep [filename|-r] reg-expn\n-r\tSearch all files recursively\nfilename\tSpecify the filename to search into\nreg-exp\tThe regular expression to search for"))
+  ([& args](println "I shuold check the parameters"))
+  )
