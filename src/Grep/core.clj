@@ -34,6 +34,14 @@
      (reduce + (map #(get %1 :found) results-map))
  )
 
+(defn apply-matches [line matches-map]
+  "Given the line and the map containig {:start X :end Y} where a match
+has been found in the line, returns the line with the match ***marked***"
+  (str (map (fn [{s :start e :end}]
+               
+              ) matches-map)
+  )
+
 (defn show-results [results]
 
   (let [occ  (count-occurrencies results)]
@@ -42,16 +50,11 @@
         (println "Number of occurrencies found: "  occ)
         (println (map (fn [curr-map]
                         (let [num-occ (count (get curr-map :occurrencies))]
-                              (str "\nLine "
-                                   (get-in  curr-map [:line-num])
-                                   "-> "
-                                  (if (> num-occ 1 )
-                                     (str num-occ " occurrencies")
-                                     (str num-occ " occurrency")
-                                     )
-                                  "at "
-                                   (apply str (map #(str "(" ( %1 :start) ", " (%1 :end) ") ") (sort-by :start (get-in curr-map [:occurrencies])))) 
-                                   )))
+                          (str "\n"
+                               (get-in  curr-map [:line-num])
+                               ": "
+                                (apply-matches line (get-in curr-map [:occurrencies]))
+                                ))
                           results)
         ))
       (println "Sorry. No occurrencies found")
@@ -81,7 +84,19 @@
     )
   )
 
+(defn grep-recursive [pattern]
+  (println "TO BE DONE"))
+
 (defn -main
-  ([] (println "Syntax: grep [filename|-r] reg-expn\n-r\tSearch all files recursively\nfilename\tSpecify the filename to search into\nreg-exp\tThe regular expression to search for"))
-  ([& args](println "I shuold check the parameters"))
-  )
+  ([] (println "Syntax: grep [filename|-r] reg-expn\n"
+               "-r\t\tSearch all files recursively\n"
+               "filename\t\tSpecify the filename to search into\n"
+               "reg-exp\t\tThe regular expression to search for"))
+  ([filename pattern]
+     (if  (= filename "-r")
+       (grep-recursive pattern)
+       (grep filename pattern)
+       ))
+  ;;simply ignore any other arguments
+  ([filename pattern args &](grep filename pattern )
+  ))
