@@ -21,14 +21,11 @@
           (recur (re-find matcher) new-res (inc acc))
           )
          )
-        
-      
-         res
-       
-      )
-    )
-  )
-)
+         res       
+      ))))
+    
+  
+
 
 (defn count-occurrencies [results-map]
      (reduce + (map #(get %1 :found) results-map))
@@ -37,10 +34,9 @@
 (defn apply-matches [line matches-map]
   "Given the line and the map containig {:start X :end Y} where a match
 has been found in the line, returns the line with the match ***marked***"
-  (str (map (fn [{s :start e :end}]
-               
-              ) matches-map)
-  )
+  (reduce (fn [line {s :start e :end}] 
+            (. (. (. (StringBuffer. line ) insert s "<*") insert (+ e 2) "*>") toString)       
+            )  line matches-map))
 
 (defn show-results [results]
 
@@ -53,8 +49,8 @@ has been found in the line, returns the line with the match ***marked***"
                           (str "\n"
                                (get-in  curr-map [:line-num])
                                ": "
-                                (apply-matches line (get-in curr-map [:occurrencies]))
-                                ))
+                                (apply-matches (get-in curr-map [:line]) (get-in curr-map [:occurrencies]))
+                                )))
                           results)
         ))
       (println "Sorry. No occurrencies found")
@@ -63,7 +59,8 @@ has been found in the line, returns the line with the match ***marked***"
 
 
  ;; grep simply scan the given fine and search for the specified reg-ex
- ;; It returns a list of couples [col row] where each matching has been found
+;; It returns a list of couples [col row] where each matching has been found
+;; this is a test this is a test this is a test this is a test
 (defn process-file [filename search-for]
   
     (with-open [rdr (BufferedReader. (FileReader. filename))]
