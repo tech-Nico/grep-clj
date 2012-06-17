@@ -1,5 +1,5 @@
 (ns Grep.core
-  (:import (java.io BufferedReader FileReader))
+  (:import (java.io BufferedReader FileReader File FileNotFoundException))
   (:gen-class))
 (use 'clojure.pprint)
 
@@ -35,7 +35,13 @@
   "Given the line and the map containig {:start X :end Y} where a match
 has been found in the line, returns the line with the match ***marked***"
   (reduce (fn [line {s :start e :end}] 
-            (. (. (. (StringBuffer. line ) insert s "<*") insert (+ e 2) "*>") toString)       
+             (-> line
+                StringBuffer.
+                (. insert s "<*")
+                (. insert (+ e 2) "*>")
+                (. toString)
+            )
+                
             )  line matches-map))
 
 (defn show-results [results]
@@ -64,7 +70,8 @@ has been found in the line, returns the line with the match ***marked***"
 (defn process-file [filename search-for]
   
     (with-open [rdr (BufferedReader. (FileReader. filename))]
-       
+
+      ;;This should be refactored by using the -> (or ->> ?) macro
       (show-results
        (sort-by :line-num
                 (filter #(> (% :found) 0)
@@ -75,11 +82,32 @@ has been found in the line, returns the line with the match ***marked***"
             ))
 
 (defn grep [filename search-for]
-  (if (. (java.io.File. filename) exists)
+  "Check if the given filename exists and call the function to
+search for the matches. It has side effects since it's printing
+an error message if the file doesn't exist. Maybe it should return a value
+or throw an exception."
+  
+  (if (. (File. filename) exists)
     (process-file filename search-for)
     (println "File [" filename "] not found")
     )
   )
+
+(defn as-file [s]
+  "Code courtesy of bpsm (https://gist.github.com/bpsm)
+Given a filename/path return its java.io.File representation."
+  (cond (instance? File s) s   ; already a file, return unchanged
+        (string? s) (File. s)  ; return java.io.File for path s
+        :else nil))
+
+(defn walk [^File dir]
+  "Source code courtesy of bpsm (https://gist.github.com/bpsm)
+Given a directory, returns a map with the list of files traversing all subdirectories."
+  (let [children (.listFiles dir)
+        subdirs (filter #(.isDirectory %) children)
+        files (filter #(.isFile %) children)]
+    (concat files (mapcat walk subdirs))))
+
 
 (defn grep-recursive [pattern]
   (println "TO BE DONE"))
