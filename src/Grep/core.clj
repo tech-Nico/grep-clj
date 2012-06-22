@@ -44,12 +44,13 @@ has been found in the line, returns the line with the match ***marked***"
                 
             )  line matches-map))
 
-(defn show-results [results]
+(defn show-results [filename results]
 
   (let [occ  (count-occurrencies results)]
     (if (> occ 0)
      (do
-        (println "Number of occurrencies found: "  occ)
+       (println "File: " filename)
+       (println "Number of occurrencies found: "  occ)
         (println (map (fn [curr-map]
                         (let [num-occ (count (get curr-map :occurrencies))]
                           (str "\n"
@@ -73,10 +74,11 @@ search for the matches. It has side effects since it's printing
 an error message if the file doesn't exist. Maybe it should return a value
 or throw an exception."
   
-    (with-open [rdr (BufferedReader. (FileReader. file))]
+  (with-open [rdr (BufferedReader. (FileReader. (. file getCanonicalPath)))]
 
       ;;This should be refactored by using the -> (or ->> ?) macro
       (show-results
+       (. file getCanonicalPath) 
        (sort-by :line-num
                 (filter #(> (% :found) 0)
                         (map-indexed  (fn [line-num line]
@@ -102,37 +104,25 @@ Given a directory, returns a map with the list of files traversing all subdirect
 
 
 (defn grep-recursive [dir pattern]
-  (-> dir
-      walk
-      (apply #(grep %1 pattern))))
+  (print "Start grep-recursive")
+  (dorun 
+      (map #(grep %1 pattern) (walk dir))) 
+ )
 
 (defn -main
-  ([] (println "Syntax: grep [filename|[-r dir]] reg-expn\n"
-               "-d          Search all files in the specified [dir] and recursively in all\n"
-               "            subdirectories \n"
-               "filename    Specify the filename to search into\n"
-               "reg-exp     The regular expression to search for"))
+  ([] (println "Syntax: grep [filename|dir] reg-exp\n"
+               "filename|dir    Specify the filename to search into\n"
+               "                If this represents a directory, grep will search\n"
+               "                in any single file and will traverse directories recursively"
+               "reg-exp         The regular expression to search for"))
   ([param]
      (-main))
   ([filename pattern]
-     (if  (= filename "-d")
+     (if (. (as-file filename) isDirectory)
+       (grep-recursive (as-file filename) pattern)
        (grep (as-file filename) pattern)
-       (do
-         (println "Invalid number of arguments")
-         (-main)
-         )
-       ))
-  ;;simply ignore any other arguments
-  ([option dir pattern]
-     (if (= option "-d")
-       (grep-recursive (as-file dir) pattern)
-       (do
-         (println "Invalid option")
-         (-main)
-         )
-     )
-     )
-  ([option dir pattern args &]
+      ))
+  ([option dir filename pattern args &]
      (println "Invalid number of arguments")
      (-main)
      )  
